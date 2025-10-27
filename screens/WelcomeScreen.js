@@ -1,10 +1,10 @@
 import {
-    SafeAreaView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 //import React from 'react';
 
@@ -16,7 +16,7 @@ export default function WelcomeScreen({ navigation }) {
       {/* Main Content */}
       <View style={styles.content}>
         {/* Title */}
-        <Text style={styles.title}>Welcome to The Reporter</Text>
+        <Text style={styles.title}>Welcome to ParkBest App</Text>
         
         {/* Continue Button */}
         <TouchableOpacity 

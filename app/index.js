@@ -9,7 +9,7 @@ import SignupScreen from '../screens/SignupScreen';
 import SmartRouterScreen from '../screens/SmartRouterScreen.js';
 import WelcomeScreen from '../screens/WelcomeScreen';
 
-// Create stack navigator
+// Creating stack navigator
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -46,7 +46,7 @@ export default function App() {
           name="Report" 
           component={ReportScreen}
           options={{ 
-          title: 'Road Report',
+          title: 'ParkBest',
           headerLeft: null, // Removes back button on Report screen
           gestureEnabled: false // Disables swipe back for better interactivity
           }}

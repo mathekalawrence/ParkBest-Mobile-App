@@ -94,7 +94,7 @@ export default function ReportScreen({ navigation }) {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <Ionicons name="car-sport" size={30} color="#fff" />
-          <Text style={styles.headerTitle}> The Road/s Report</Text>
+          <Text style={styles.headerTitle}> ParkBest App</Text>
         </View>
         <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
           <Ionicons name="log-out-outline" size={24} color="#fff" />
