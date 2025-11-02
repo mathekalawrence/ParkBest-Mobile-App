@@ -14,8 +14,19 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import Geolocation from 'react-native-geolocation-service';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+// Conditional import for geolocation
+let Geolocation;
+if (Platform.OS !== 'web') {
+  Geolocation = require('react-native-geolocation-service').default;
+}
+// Conditional import for web compatibility
+let MapView, Marker, Polyline;
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+  Polyline = Maps.Polyline;
+}
 
 const { width, height } = Dimensions.get('window');
 
@@ -66,9 +77,10 @@ const RealTimeTrafficScreen = () => {
   const getCurrentLocation = () => {
     setIsGettingLocation(true);
     
-    requestLocationPermission().then(granted => {
-      if (granted) {
-        Geolocation.getCurrentPosition(
+    if (Platform.OS === 'web') {
+      // Web geolocation fallback
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
             const newLocation = {
@@ -77,36 +89,76 @@ const RealTimeTrafficScreen = () => {
               address: 'Your Current Location'
             };
             setCurrentLocation(newLocation);
-            
-            // Set map region to current location
             setMapRegion({
               latitude,
               longitude,
               latitudeDelta: 0.0922,
               longitudeDelta: 0.0421,
             });
-            
             setIsGettingLocation(false);
             reverseGeocode(latitude, longitude);
           },
           (error) => {
-            console.error('Location error:', error);
-            Alert.alert('❌ Location Error', 'Could not get your location. Using default location.');
+            console.error('Web location error:', error);
             setCurrentLocation({
               latitude: -1.2921,
               longitude: 36.8219,
               address: 'Nairobi, Kenya'
             });
             setMapRegion(defaultRegion);
-            setIsGettingLocation(false); 
-          },
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+            setIsGettingLocation(false);
+          }
         );
       } else {
-        Alert.alert('Permission Denied', 'Location permission is required for traffic updates.');
+        setCurrentLocation({
+          latitude: -1.2921,
+          longitude: 36.8219,
+          address: 'Nairobi, Kenya'
+        });
+        setMapRegion(defaultRegion);
         setIsGettingLocation(false);
       }
-    });
+    } else {
+      // Mobile geolocation
+      requestLocationPermission().then(granted => {
+        if (granted) {
+          Geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              const newLocation = {
+                latitude,
+                longitude,
+                address: 'Your Current Location'
+              };
+              setCurrentLocation(newLocation);
+              setMapRegion({
+                latitude,
+                longitude,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              });
+              setIsGettingLocation(false);
+              reverseGeocode(latitude, longitude);
+            },
+            (error) => {
+              console.error('Location error:', error);
+              Alert.alert('❌ Location Error', 'Could not get your location. Using default location.');
+              setCurrentLocation({
+                latitude: -1.2921,
+                longitude: 36.8219,
+                address: 'Nairobi, Kenya'
+              });
+              setMapRegion(defaultRegion);
+              setIsGettingLocation(false); 
+            },
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+          );
+        } else {
+          Alert.alert('Permission Denied', 'Location permission is required for traffic updates.');
+          setIsGettingLocation(false);
+        }
+      });
+    }
   };
 
   // Converting coordinates to address
@@ -365,7 +417,16 @@ const RealTimeTrafficScreen = () => {
     }
   };
 
-  // ... (keep your existing helper functions: getTrafficColor, getTrafficIcon, etc.)
+  // Helper function for traffic color
+  const getTrafficColor = (congestion) => {
+    switch (congestion) {
+      case 'severe': return '#dc2626';
+      case 'high': return '#ea580c';
+      case 'medium': return '#d97706';
+      case 'low': return '#059669';
+      default: return '#6b7280';
+    }
+  };
 
   useEffect(() => {
     getCurrentLocation();
@@ -452,43 +513,46 @@ const RealTimeTrafficScreen = () => {
       {showMap && mapRegion && (
         <View style={styles.mapContainer}>
           <Text style={styles.mapTitle}>🗺️ Route Map</Text>
-          <MapView
-            style={styles.map}
-            region={mapRegion}
-            showsUserLocation={true}
-            showsTraffic={true}  // This shows real-time traffic on Google Maps
-            showsCompass={true}
-          >
-            {/* Current Location Marker */}
-            {currentLocation && (
-              <Marker
-                coordinate={currentLocation}
-                title="Your Location"
-                description={currentLocation.address}
-                pinColor="#3b82f6"
-              />
-            )}
-
-            {/* Destination Marker */}
-            {trafficData?.destinationCoords && (
-              <Marker
-                coordinate={trafficData.destinationCoords}
-                title="Destination"
-                description={destination}
-                pinColor="#ef4444"
-              />
-            )}
-
-            {/* Route Polyline */}
-            {routeCoordinates.length > 0 && (
-              <Polyline
-                coordinates={routeCoordinates}
-                strokeColor="#3b82f6"
-                strokeWidth={4}
-                lineDashPattern={[1]}
-              />
-            )}
-          </MapView>
+          {Platform.OS === 'web' ? (
+            // Web fallback
+            <View style={styles.webMapPlaceholder}>
+              <Text style={styles.webMapText}>📱 Map view available on mobile app</Text>
+              <Text style={styles.webMapSubtext}>Use Google Maps button below for navigation</Text>
+            </View>
+          ) : (
+            <MapView
+              style={styles.map}
+              region={mapRegion}
+              showsUserLocation={true}
+              showsTraffic={true}
+              showsCompass={true}
+            >
+              {currentLocation && (
+                <Marker
+                  coordinate={currentLocation}
+                  title="Your Location"
+                  description={currentLocation.address}
+                  pinColor="#3b82f6"
+                />
+              )}
+              {trafficData?.destinationCoords && (
+                <Marker
+                  coordinate={trafficData.destinationCoords}
+                  title="Destination"
+                  description={destination}
+                  pinColor="#ef4444"
+                />
+              )}
+              {routeCoordinates.length > 0 && (
+                <Polyline
+                  coordinates={routeCoordinates}
+                  strokeColor="#3b82f6"
+                  strokeWidth={4}
+                  lineDashPattern={[1]}
+                />
+              )}
+            </MapView>
+          )}
 
           {/* Map Actions */}
           <View style={styles.mapActions}>
@@ -890,6 +954,63 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     lineHeight: 20,
+  },
+  mapContainer: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  mapTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 12,
+  },
+  map: {
+    height: 300,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  webMapPlaceholder: {
+    height: 300,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderStyle: 'dashed',
+  },
+  webMapText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6b7280',
+    marginBottom: 4,
+  },
+  webMapSubtext: {
+    fontSize: 14,
+    color: '#9ca3af',
+  },
+  mapActions: {
+    alignItems: 'center',
+  },
+  navigateButton: {
+    backgroundColor: '#10b981',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  navigateButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });
 
