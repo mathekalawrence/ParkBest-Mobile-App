@@ -18,5 +18,9 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
-  }
+  },
+  "plugins": [
+    "expo-router",
+    "expo-web-browser"
+  ]
 }
