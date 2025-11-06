@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -8,27 +9,32 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  ActivityIndicator,
 } from 'react-native';
-
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { signIn, isLoading } = useAuth();
 
-  const handleLogin = () => {
-    // Simple validation
-    if (email && password) {
-      //alert('Login successful!');
-      // Here, it's just typical navigation to the main app
-      //successful navigation should lead to the Report Page
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    const result = await signIn(email, password);
+    
+    if (result.success) {
+      Alert.alert('Success', 'Login successful!');
       navigation.reset({
         index: 0,
-        routes: [{ name: 'Report'}],
+        routes: [{ name: 'Report' }],
       });
-
     } else {
-      alert('Please fill in all fields');
+      Alert.alert('Login Failed', result.message);
     }
   }; 
 
@@ -77,6 +83,7 @@ export default function LoginScreen({ navigation }) {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            editable={!isLoading}
           />
           
           <TextInput
@@ -86,15 +93,24 @@ export default function LoginScreen({ navigation }) {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            editable={!isLoading}
           />
           
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Login</Text>
+          <TouchableOpacity 
+            style={[styles.loginButton, isLoading && styles.disabledButton]} 
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.loginButtonText}>Login</Text>
+            )}
           </TouchableOpacity>
           
           {/* Signup Link */}
           <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Dont have an account? </Text>
+            <Text style={styles.signupText}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
               <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
@@ -147,6 +163,9 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginTop: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
   },
   loginButtonText: {
     color: '#ffffff',

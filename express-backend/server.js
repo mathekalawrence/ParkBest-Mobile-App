@@ -6,7 +6,9 @@ const rateLimit = require('express-rate-limit');
 const db = require('./config/database');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
+console.log('🔧 Environment PORT:', process.env.PORT);
+console.log('🔧 Using PORT:', PORT);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -28,6 +30,7 @@ app.use('/api/payments', require('./routes/payments'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/realtime', require('./routes/realtime'));
 app.use('/api/maps', require('./routes/maps'));
+app.use('/api/reports', require('./routes/reports'));
 
 // Start scheduled tasks
 const { startScheduledTasks } = require('./utils/scheduler');

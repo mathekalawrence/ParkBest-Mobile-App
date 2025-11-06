@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -8,60 +9,44 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
+  ActivityIndicator
 } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
-   
 export default function SignupScreen({ navigation }) {
-  const [name, setName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { signUp, isLoading } = useAuth();
 
-  //{/*
-  const handleSignup = () => {
-    // Simple validation
-     if (name && email && password && confirmPassword) {
-      if (password === confirmPassword) {
-        alert('Account created successfully!');
-       // navigation.navigate('Login');
-       //Navigating to the Report Screen after signup
-       navigation.reset({
-        index: 0,
-        routes: [{ name: 'Report'}],
-       });
-
-      } else {
-        alert('Passwords do not match');
-      }
-    } else {
-      alert('Please fill in all fields');
+  const handleSignup = async () => {
+    if (!fullName || !email || !phone || !password || !confirmPassword) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
     }
-   };
-   //*/}
 
-   {/*
-
-    const handleSignup = async () => {
-
-      //const navigation = useNavigation(); 
-    setLoading(true);
-    
-    const { data, error } = await supabase.auth.signUp({
-      email: email, 
-      password: password,
-    });
-
-    if (error) {
-      Alert.alert('Signup Failed', error.message);
-    } else {
-      Alert.alert('Success!', 'Check your email for verification');
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
     }
-    
-    setLoading(false);
 
-    }; */}
+    if (password.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters');
+      return;
+    }
+
+    const result = await signUp({ fullName, email, phone, password });
+    
+    if (result.success) {
+      Alert.alert('Success', 'Account created successfully! Please login.');
+      navigation.navigate('Login');
+    } else {
+      Alert.alert('Signup Failed', result.message);
+    }
+  };
 
   return (
     //<StackNavigator>
@@ -78,8 +63,9 @@ export default function SignupScreen({ navigation }) {
             style={styles.input}
             placeholder="Full Name"
             placeholderTextColor="#999"
-            value={name}
-            onChangeText={setName}
+            value={fullName}
+            onChangeText={setFullName}
+            editable={!isLoading}
           />
           
           <TextInput
@@ -90,6 +76,17 @@ export default function SignupScreen({ navigation }) {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            editable={!isLoading}
+          />
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Phone Number"
+            placeholderTextColor="#999"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            editable={!isLoading}
           />
           
           <TextInput
@@ -99,6 +96,7 @@ export default function SignupScreen({ navigation }) {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
+            editable={!isLoading}
           />
           
           <TextInput
@@ -108,10 +106,19 @@ export default function SignupScreen({ navigation }) {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
+            editable={!isLoading}
           />
           
-          <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-            <Text style={styles.signupButtonText}>Create Account</Text>
+          <TouchableOpacity 
+            style={[styles.signupButton, isLoading && styles.disabledButton]} 
+            onPress={handleSignup}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.signupButtonText}>Create Account</Text>
+            )}
           </TouchableOpacity>
           
           {/* Login Link */}
@@ -170,6 +177,9 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginTop: 10,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
   },
   signupButtonText: {
     color: '#ffffff',

@@ -170,7 +170,7 @@ export default function ReportScreen({ navigation }) {
           {/* Book Parking Button */}
           <TouchableOpacity
            style={styles.bookParkingButton}
-           onPress={()=> navigation.navigate('BookParking')}
+           onPress={()=> navigation.navigate('SimpleBookParking')}
         
           >
 
@@ -189,9 +189,12 @@ export default function ReportScreen({ navigation }) {
 
           {/* Additional Quick Actions */}
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.quickAction}>
-              <Ionicons name="location" size={24} color="#1a237e" />
-              <Text style={styles.quickActionText}>My Location</Text>
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => navigation.navigate('IntegrationReport')}
+            >
+              <Ionicons name="analytics" size={24} color="#1a237e" />
+              <Text style={styles.quickActionText}>Integration Report</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={styles.quickAction}>

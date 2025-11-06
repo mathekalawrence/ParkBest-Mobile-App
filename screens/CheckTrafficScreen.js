@@ -31,7 +31,7 @@ if (Platform.OS !== 'web') {
 const { width, height } = Dimensions.get('window');
 
 const RealTimeTrafficScreen = () => {
-  const [trafficData, setTrafficData, getTrafficColor] = useState(null);
+  const [trafficData, setTrafficData] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
   const [destination, setDestination] = useState('');
   const [searchText, setSearchText] = useState('');
@@ -427,6 +427,8 @@ const RealTimeTrafficScreen = () => {
       default: return '#6b7280';
     }
   };
+
+
 
   useEffect(() => {
     getCurrentLocation();

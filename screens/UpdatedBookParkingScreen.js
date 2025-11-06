@@ -1,4 +1,4 @@
-
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
 import React, { useEffect, useState } from 'react';
 import {
@@ -41,7 +41,8 @@ const UpdatedBookParkingScreen = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [vehiclePlate, setVehiclePlate] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
-
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentBooking, setCurrentBooking] = useState(null);
 
   useEffect(() => {
@@ -297,11 +298,25 @@ const UpdatedBookParkingScreen = () => {
         {/* Date and Time Selection */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Start Time</Text>
-          <View style={styles.dateSelector}>
+          <TouchableOpacity
+            style={styles.dateSelector}
+            onPress={() => setShowDatePicker(true)}
+          >
             <Text style={styles.dateText}>
-              Now (Immediate booking)
+              {selectedDate.toLocaleString()}
             </Text>
-          </View>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={selectedDate}
+              mode="datetime"
+              display="default"
+              onChange={(event, date) => {
+                setShowDatePicker(false);
+                if (date) setSelectedDate(date);
+              }}
+            />
+          )}
         </View>
 
         {/* Duration Selection */}
@@ -376,7 +391,7 @@ const UpdatedBookParkingScreen = () => {
             <ActivityIndicator color="white" />
           ) : (
             <Text style={styles.bookButtonText}>
-              Book Parking - Ksh {totalCost || 0}
+              Book Parking - Ksh {totalCost}
             </Text>
           )}
         </TouchableOpacity>
