@@ -9,6 +9,19 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Create admins table
+CREATE TABLE IF NOT EXISTS admins (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  username VARCHAR(255) UNIQUE NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  full_name VARCHAR(255) NOT NULL,
+  role VARCHAR(50) DEFAULT 'admin',
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Create parking zones table
 CREATE TABLE IF NOT EXISTS parking_zones (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -59,6 +72,22 @@ CREATE TABLE IF NOT EXISTS payments (
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed')),
   completed_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create reports table
+CREATE TABLE IF NOT EXISTS reports (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  report_name VARCHAR(255) NOT NULL,
+  report_type VARCHAR(50) NOT NULL,
+  description TEXT,
+  file_name VARCHAR(255),
+  file_size VARCHAR(20),
+  file_format VARCHAR(10) DEFAULT 'PDF',
+  status VARCHAR(20) DEFAULT 'processing' CHECK (status IN ('processing', 'ready', 'failed')),
+  summary TEXT,
+  created_by UUID REFERENCES admin_users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Sample data for testing

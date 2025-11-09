@@ -1,173 +1,444 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const Joi = require('joi');
 
-// Dashboard analytics
-router.get('/dashboard', async (req, res) => {
+// Admin authentication middleware
+const adminAuth = async (req, res, next) => {
   try {
-    // Get dashboard metrics
-    const metrics = await db.query(`
-      SELECT 
-        (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'completed') as total_revenue,
-        (SELECT COUNT(*) FROM bookings WHERE status = 'active') as active_bookings,
-        (SELECT COUNT(*) FROM parking_zones WHERE is_active = true) as total_zones,
-        (SELECT COUNT(*) FROM parking_spots) as total_spots,
-        (SELECT COUNT(*) FROM parking_spots WHERE is_occupied = true) as occupied_spots
-    `);
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Admin token required' });
+    }
 
-    const data = metrics.rows[0];
-    const occupancyRate = data.total_spots > 0 ? (data.occupied_spots / data.total_spots) * 100 : 0;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const result = await db.query(
+      'SELECT id, username, role FROM admin_users WHERE id = $1',
+      [decoded.adminId]
+    );
 
-    res.json({
-      totalRevenue: parseFloat(data.total_revenue),
-      activeBookings: parseInt(data.active_bookings),
-      totalZones: parseInt(data.total_zones),
-      occupancyRate: Math.round(occupancyRate * 100) / 100
-    });
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid admin token' });
+    }
+
+    req.admin = result.rows[0];
+    next();
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch dashboard data' });
+    res.status(401).json({ error: 'Admin authentication failed' });
   }
+};
+
+// Validation schemas
+const adminLoginSchema = Joi.object({
+  username: Joi.string().required(),
+  password: Joi.string().required()
 });
 
-// Get all bookings with pagination
-router.get('/bookings', async (req, res) => {
+const adminRegisterSchema = Joi.object({
+  username: Joi.string().min(3).max(30).required(),
+  password: Joi.string().min(6).required()
+});
+
+const zoneSchema = Joi.object({
+  name: Joi.string().required(),
+  location: Joi.string().required(),
+  hourly_rate: Joi.number().positive().required(),
+  total_spots: Joi.number().integer().positive().required(),
+  description: Joi.string().allow('').optional(),
+  zone_type: Joi.string().optional(),
+  features: Joi.array().optional()
+});
+
+// Admin registration
+router.post('/register', async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const offset = (page - 1) * limit;
+    const { error: validationError } = adminRegisterSchema.validate(req.body);
+    if (validationError) {
+      return res.status(400).json({ error: validationError.details[0].message });
+    }
 
-    // Get total count
-    const countResult = await db.query('SELECT COUNT(*) FROM bookings');
-    const total = parseInt(countResult.rows[0].count);
+    const { username, password } = req.body;
 
-    // Get bookings with pagination
-    const result = await db.query(`
-      SELECT 
-        b.*,
-        u.full_name,
-        u.email,
-        ps.spot_number,
-        pz.name as zone_name,
-        pz.location as zone_location,
-        p.status as payment_status,
-        p.amount as payment_amount,
-        p.mpesa_receipt
-      FROM bookings b
-      JOIN users u ON b.user_id = u.id
-      JOIN parking_spots ps ON b.parking_spot_id = ps.id
-      JOIN parking_zones pz ON ps.parking_zone_id = pz.id
-      LEFT JOIN payments p ON b.id = p.booking_id
-      ORDER BY b.created_at DESC
-      LIMIT $1 OFFSET $2
-    `, [limit, offset]);
+    // Check if admin already exists
+    const existingAdmin = await db.query(
+      'SELECT id FROM admin_users WHERE username = $1',
+      [username]
+    );
 
-    res.json({
-      bookings: result.rows,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit)
+    if (existingAdmin.rows.length > 0) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create admin
+    const result = await db.query(
+      'INSERT INTO admin_users (username, password) VALUES ($1, $2) RETURNING id, username, role, created_at',
+      [username, hashedPassword]
+    );
+
+    const admin = result.rows[0];
+
+    res.status(201).json({
+      message: 'Admin account created successfully',
+      admin: {
+        id: admin.id,
+        username: admin.username,
+        role: admin.role,
+        created_at: admin.created_at
       }
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch bookings' });
+    console.error('Admin registration error:', error);
+    res.status(500).json({ error: 'Registration failed' });
   }
 });
 
-// Manage parking zones
-router.post('/zones', async (req, res) => {
+// Admin login
+router.post('/login', async (req, res) => {
   try {
-    const { name, location, hourly_rate, total_spots } = req.body;
+    const { error: validationError } = adminLoginSchema.validate(req.body);
+    if (validationError) {
+      return res.status(400).json({ error: validationError.details[0].message });
+    }
 
-    const result = await db.query(
-      'INSERT INTO parking_zones (name, location, hourly_rate, total_spots, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, location, hourly_rate, total_spots, true]
+    const { username, password } = req.body;
+
+    const result = await db.query('SELECT * FROM admin_users WHERE username = $1', [username]);
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const admin = result.rows[0];
+    const isValidPassword = await bcrypt.compare(password, admin.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const token = jwt.sign(
+      { adminId: admin.id, username: admin.username, role: admin.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '8h' }
     );
 
-    const data = result.rows[0];
+    res.json({
+      message: 'Admin login successful',
+      token,
+      admin: {
+        id: admin.id,
+        username: admin.username,
+        role: admin.role
+      }
+    });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// Get all users (registrations)
+router.get('/users', adminAuth, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        id, email, full_name, phone, created_at,
+        (SELECT COUNT(*) FROM bookings WHERE user_id = users.id) as total_bookings
+      FROM users 
+      ORDER BY created_at DESC
+    `);
+
+    res.json({ users: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Get user details with bookings
+router.get('/users/:userId', adminAuth, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const userResult = await db.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const bookingsResult = await db.query(`
+      SELECT 
+        b.*,
+        ps.spot_number,
+        pz.name as zone_name,
+        pz.location as zone_location
+      FROM bookings b
+      JOIN parking_spots ps ON b.parking_spot_id = ps.id
+      JOIN parking_zones pz ON ps.parking_zone_id = pz.id
+      WHERE b.user_id = $1
+      ORDER BY b.created_at DESC
+    `, [userId]);
+
+    res.json({
+      user: userResult.rows[0],
+      bookings: bookingsResult.rows
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user details' });
+  }
+});
+
+// Get all parking zones
+router.get('/zones', adminAuth, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        pz.*,
+        COUNT(ps.id) as total_spots,
+        COUNT(ps.id) FILTER (WHERE NOT ps.is_occupied AND NOT ps.is_reserved) as available_spots,
+        COUNT(b.id) as total_bookings,
+        COALESCE(SUM(b.total_cost), 0) as total_revenue
+      FROM parking_zones pz
+      LEFT JOIN parking_spots ps ON pz.id = ps.parking_zone_id
+      LEFT JOIN bookings b ON ps.id = b.parking_spot_id
+      GROUP BY pz.id
+      ORDER BY pz.created_at DESC
+    `);
+
+    res.json({ zones: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch zones' });
+  }
+});
+
+// Create parking zone
+router.post('/zones', adminAuth, async (req, res) => {
+  try {
+    const { error: validationError } = zoneSchema.validate(req.body);
+    if (validationError) {
+      return res.status(400).json({ error: validationError.details[0].message });
+    }
+
+    const { name, location, hourly_rate, total_spots } = req.body;
+
+    await db.query('BEGIN');
+
+    // Create zone
+    const zoneResult = await db.query(
+      'INSERT INTO parking_zones (name, location, hourly_rate, total_spots) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, location, hourly_rate, total_spots]
+    );
+
+    const zone = zoneResult.rows[0];
+
+    // Create parking spots
+    for (let i = 1; i <= total_spots; i++) {
+      await db.query(
+        'INSERT INTO parking_spots (parking_zone_id, spot_number) VALUES ($1, $2)',
+        [zone.id, i.toString().padStart(3, '0')]
+      );
+    }
+
+    await db.query('COMMIT');
 
     res.status(201).json({
       message: 'Parking zone created successfully',
-      zone: data
+      zone
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create parking zone' });
+    await db.query('ROLLBACK');
+    res.status(500).json({ error: 'Failed to create zone' });
   }
 });
 
-// Update zone pricing
-router.put('/zones/:zoneId/pricing', async (req, res) => {
+// Update parking zone
+router.put('/zones/:zoneId', adminAuth, async (req, res) => {
   try {
     const { zoneId } = req.params;
-    const { hourly_rate } = req.body;
+    const { name, location, hourly_rate, is_active } = req.body;
 
     const result = await db.query(
-      'UPDATE parking_zones SET hourly_rate = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-      [hourly_rate, zoneId]
+      'UPDATE parking_zones SET name = $1, location = $2, hourly_rate = $3, is_active = $4, updated_at = NOW() WHERE id = $5 RETURNING *',
+      [name, location, hourly_rate, is_active, zoneId]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Zone not found' });
     }
 
-    const data = result.rows[0];
-
     res.json({
-      message: 'Pricing updated successfully',
-      zone: data
+      message: 'Zone updated successfully',
+      zone: result.rows[0]
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to update pricing' });
+    res.status(500).json({ error: 'Failed to update zone' });
   }
 });
 
-// Revenue reports
-router.get('/reports/revenue', async (req, res) => {
+// Get zone spots
+router.get('/zones/:zoneId/spots', adminAuth, async (req, res) => {
   try {
-    const { start_date, end_date } = req.query;
+    const { zoneId } = req.params;
 
-    let query = `
+    const result = await db.query(`
       SELECT 
-        p.amount,
-        p.completed_at,
-        pz.name as zone_name
-      FROM payments p
-      JOIN bookings b ON p.booking_id = b.id
+        ps.*,
+        b.id as booking_id,
+        b.vehicle_plate,
+        b.start_time,
+        b.end_time,
+        b.status as booking_status,
+        u.full_name as user_name
+      FROM parking_spots ps
+      LEFT JOIN bookings b ON ps.id = b.parking_spot_id AND b.status IN ('confirmed', 'active')
+      LEFT JOIN users u ON b.user_id = u.id
+      WHERE ps.parking_zone_id = $1
+      ORDER BY ps.spot_number
+    `, [zoneId]);
+
+    res.json({ spots: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch spots' });
+  }
+});
+
+// Get all bookings
+router.get('/bookings', adminAuth, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        b.*,
+        u.full_name as user_name,
+        u.email as user_email,
+        u.phone as user_phone,
+        ps.spot_number,
+        pz.name as zone_name,
+        pz.location as zone_location
+      FROM bookings b
+      JOIN users u ON b.user_id = u.id
       JOIN parking_spots ps ON b.parking_spot_id = ps.id
       JOIN parking_zones pz ON ps.parking_zone_id = pz.id
-      WHERE p.status = 'completed'
-    `;
+      ORDER BY b.created_at DESC
+    `);
 
-    const params = [];
-    if (start_date) {
-      params.push(start_date);
-      query += ` AND p.completed_at >= $${params.length}`;
-    }
-    if (end_date) {
-      params.push(end_date);
-      query += ` AND p.completed_at <= $${params.length}`;
-    }
+    res.json({ bookings: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch bookings' });
+  }
+});
 
-    const result = await db.query(query, params);
-    const data = result.rows;
+// Get all payments
+router.get('/payments', adminAuth, async (req, res) => {
+  try {
+    const result = await db.query(`
+      SELECT 
+        p.*,
+        b.id as booking_id,
+        u.full_name as user_name,
+        u.email as user_email,
+        ps.spot_number,
+        pz.name as zone_name,
+        b.vehicle_plate
+      FROM payments p
+      JOIN bookings b ON p.booking_id = b.id
+      JOIN users u ON b.user_id = u.id
+      JOIN parking_spots ps ON b.parking_spot_id = ps.id
+      JOIN parking_zones pz ON ps.parking_zone_id = pz.id
+      ORDER BY p.created_at DESC
+    `);
 
-    // Group by zone
-    const revenueByZone = data.reduce((acc, payment) => {
-      const zoneName = payment.zone_name || 'Unknown';
-      acc[zoneName] = (acc[zoneName] || 0) + parseFloat(payment.amount);
-      return acc;
-    }, {});
+    res.json({ payments: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch payments' });
+  }
+});
 
-    const totalRevenue = data.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+// Get all reports
+router.get('/reports', adminAuth, async (req, res) => {
+  try {
+    console.log('📊 Fetching reports...');
+    const result = await db.query(`
+      SELECT * FROM admin_reports 
+      ORDER BY created_at DESC
+    `);
+    console.log('📊 Reports found:', result.rows.length);
+    res.json({ reports: result.rows });
+  } catch (error) {
+    console.error('❌ Reports error:', error);
+    res.status(500).json({ error: 'Failed to fetch reports' });
+  }
+});
 
-    res.json({
-      totalRevenue,
-      revenueByZone,
-      totalTransactions: data.length
+// Generate new report
+router.post('/reports/generate', adminAuth, async (req, res) => {
+  try {
+    console.log('📊 Generating report:', req.body);
+    const { report_type } = req.body;
+    
+    const reportName = `${report_type.charAt(0).toUpperCase() + report_type.slice(1)} Report - ${new Date().toLocaleDateString()}`;
+    const fileName = `${report_type}_report_${Date.now()}.pdf`;
+    
+    const result = await db.query(
+      'INSERT INTO admin_reports (report_name, report_type, description, file_name, status, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      [reportName, report_type, `Generated ${report_type} report`, fileName, 'processing', req.admin.id]
+    );
+    console.log('📊 Report created:', result.rows[0]);
+
+    // Simulate report generation (in real app, this would be async)
+    setTimeout(async () => {
+      await db.query(
+        'UPDATE admin_reports SET status = $1, file_size = $2 WHERE id = $3',
+        ['ready', '2.5 MB', result.rows[0].id]
+      );
+    }, 3000);
+
+    res.status(201).json({
+      message: 'Report generation started',
+      report: result.rows[0]
     });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to generate revenue report' });
+    console.error('❌ Generate report error:', error);
+    res.status(500).json({ error: 'Failed to generate report' });
+  }
+});
+
+// Get dashboard analytics
+router.get('/analytics', adminAuth, async (req, res) => {
+  try {
+    const totalUsers = await db.query('SELECT COUNT(*) as count FROM users');
+    const totalZones = await db.query('SELECT COUNT(*) as count FROM parking_zones WHERE is_active = true');
+    const totalSpots = await db.query('SELECT COUNT(*) as count FROM parking_spots');
+    const activeBookings = await db.query('SELECT COUNT(*) as count FROM bookings WHERE status IN (\'confirmed\', \'active\')');
+    const totalRevenue = await db.query('SELECT COALESCE(SUM(total_cost), 0) as total FROM bookings WHERE payment_status = \'paid\'');
+
+    const recentBookings = await db.query(`
+      SELECT 
+        b.*,
+        u.full_name,
+        ps.spot_number,
+        pz.name as zone_name
+      FROM bookings b
+      JOIN users u ON b.user_id = u.id
+      JOIN parking_spots ps ON b.parking_spot_id = ps.id
+      JOIN parking_zones pz ON ps.parking_zone_id = pz.id
+      ORDER BY b.created_at DESC
+      LIMIT 10
+    `);
+
+    res.json({
+      stats: {
+        totalUsers: parseInt(totalUsers.rows[0].count),
+        totalZones: parseInt(totalZones.rows[0].count),
+        totalSpots: parseInt(totalSpots.rows[0].count),
+        activeBookings: parseInt(activeBookings.rows[0].count),
+        totalRevenue: parseFloat(totalRevenue.rows[0].total)
+      },
+      recentBookings: recentBookings.rows
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 });
 
