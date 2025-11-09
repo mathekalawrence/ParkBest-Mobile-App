@@ -65,10 +65,11 @@ CREATE TABLE IF NOT EXISTS bookings (
 CREATE TABLE IF NOT EXISTS payments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   amount DECIMAL(10,2) NOT NULL,
-  phone TEXT,
-  checkout_request_id TEXT,
-  mpesa_receipt TEXT,
+  payment_method VARCHAR(50) DEFAULT 'mpesa',
+  mpesa_checkout_request_id TEXT,
+  mpesa_receipt_number TEXT,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed')),
   completed_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

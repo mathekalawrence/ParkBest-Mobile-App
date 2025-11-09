@@ -110,10 +110,9 @@ export default function SimpleBookParkingScreen({ navigation }) {
       console.log('🔄 Creating booking...');
       
       const bookingData = {
-        parking_zone_id: selectedZone.id,
+        parking_spot_id: selectedSpot.id,
         vehicle_plate: vehiclePlate.trim().toUpperCase(),
-        duration_hours: duration,
-        start_time: new Date().toISOString()
+        duration_hours: duration
       };
 
       const response = await apiClient.post('/parking/book', bookingData);
@@ -127,35 +126,19 @@ export default function SimpleBookParkingScreen({ navigation }) {
         cost: selectedZone.hourly_rate * duration
       });
 
-      Alert.alert(
-        '🎉 Booking Successful!',
-        `Your parking spot has been reserved!\n\n` +
-        `Zone: ${selectedZone.name}\n` +
-        `Spot: ${selectedSpot.spot_number}\n` +
-        `Vehicle: ${vehiclePlate}\n` +
-        `Duration: ${duration} hour(s)\n` +
-        `Total Cost: Ksh ${selectedZone.hourly_rate * duration}`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Reset form
-              setSelectedZone(null);
-              setSelectedSpot(null);
-              setVehiclePlate('');
-              setDuration(1);
-              setSpots([]);
-            }
-          }
-        ]
-      );
+      // Navigate to payment screen
+      const bookingWithDetails = {
+        ...response.data.booking,
+        zone_name: selectedZone.name,
+        spot_number: selectedSpot.spot_number,
+        duration_hours: duration,
+        total_amount: selectedZone.hourly_rate * duration
+      };
+
+      navigation.navigate('Payment', { booking: bookingWithDetails });
 
     } catch (error) {
       console.error('❌ Booking error:', error.message);
-      console.error('❌ Error response:', error.response?.data);
-      console.error('❌ Error status:', error.response?.status);
-      console.error('❌ Booking data sent:', bookingData);
-      
       const errorMessage = error.response?.data?.error || error.message || 'Failed to create booking';
       Alert.alert('Booking Failed', errorMessage);
       

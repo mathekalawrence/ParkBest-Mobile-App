@@ -4,6 +4,7 @@ import BookParkingScreen from '../screens/BookParkingScreen.js';
 import SimpleBookParkingScreen from '../screens/SimpleBookParkingScreen.js';
 import CheckTrafficScreen from '../screens/CheckTrafficScreen';
 import LoginScreen from '../screens/LoginScreen';
+import PaymentScreen from '../screens/PaymentScreen.js';
 import ReportIncidentScreen from '../screens/ReportIncidentScreen.js';
 import ReportScreen from '../screens/ReportScreen.js';
 import SignupScreen from '../screens/SignupScreen';
@@ -81,6 +82,12 @@ export default function App() {
       name="SmartRouter"
       component={SmartRouterScreen}
       options={{ title: 'Smart Router'}}
+      />
+
+      <Stack.Screen
+      name="Payment"
+      component={PaymentScreen}
+      options={{ title: 'Payment'}}
       />
 
       </Stack.Navigator>

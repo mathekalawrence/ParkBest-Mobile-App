@@ -1,63 +1,51 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const axios = require('axios');
+const mpesaService = require('../services/mpesaService');
+const authenticateToken = require('../middleware/auth');
 
-// M-Pesa STK Push
-router.post('/mpesa/stkpush', async (req, res) => {
+// Initiate M-Pesa payment
+router.post('/mpesa/initiate', authenticateToken, async (req, res) => {
   try {
-    const { phone, amount, booking_id } = req.body;
+    const { booking_id, phone_number } = req.body;
 
-    // Get M-Pesa access token
-    const auth = Buffer.from(`${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`).toString('base64');
-    
-    const tokenResponse = await axios.get('https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials', {
-      headers: {
-        'Authorization': `Basic ${auth}`
-      }
-    });
+    // Get booking details
+    const bookingResult = await db.query(
+      'SELECT * FROM bookings WHERE id = $1 AND user_id = $2',
+      [booking_id, req.user.id]
+    );
 
-    const accessToken = tokenResponse.data.access_token;
+    if (bookingResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
 
-    // Generate timestamp
-    const timestamp = new Date().toISOString().replace(/[^0-9]/g, '').slice(0, -3);
-    
-    // Generate password
-    const password = Buffer.from(`${process.env.MPESA_SHORTCODE}${process.env.MPESA_PASSKEY}${timestamp}`).toString('base64');
+    const booking = bookingResult.rows[0];
+    const amount = Math.round(booking.total_amount);
 
-    // STK Push request
-    const stkResponse = await axios.post('https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest', {
-      BusinessShortCode: process.env.MPESA_SHORTCODE,
-      Password: password,
-      Timestamp: timestamp,
-      TransactionType: 'CustomerPayBillOnline',
-      Amount: amount,
-      PartyA: phone,
-      PartyB: process.env.MPESA_SHORTCODE,
-      PhoneNumber: phone,
-      CallBackURL: `${process.env.BASE_URL}/api/payments/mpesa/callback`,
-      AccountReference: `PARKBEST-${booking_id}`,
-      TransactionDesc: 'ParkBest Parking Payment'
-    }, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    // Initiate STK Push
+    const stkResponse = await mpesaService.initiateSTKPush(
+      phone_number,
+      amount,
+      `PB${booking_id}`,
+      `ParkBest Parking Payment`
+    );
 
-    // Store payment request
+    // Save payment record
     await db.query(
-      'INSERT INTO payments (booking_id, amount, phone, checkout_request_id, status) VALUES ($1, $2, $3, $4, $5)',
-      [booking_id, amount, phone, stkResponse.data.CheckoutRequestID, 'pending']
+      `INSERT INTO payments (booking_id, user_id, amount, payment_method, mpesa_checkout_request_id, status)
+       VALUES ($1, $2, $3, 'mpesa', $4, 'pending')`,
+      [booking_id, req.user.id, amount, stkResponse.CheckoutRequestID]
     );
 
     res.json({
-      message: 'Payment request sent',
-      checkout_request_id: stkResponse.data.CheckoutRequestID
+      success: true,
+      message: 'Payment initiated. Check your phone for M-Pesa prompt.',
+      checkout_request_id: stkResponse.CheckoutRequestID
     });
+
   } catch (error) {
-    console.error('M-Pesa STK Push error:', error.response?.data || error.message);
-    res.status(500).json({ error: 'Payment request failed' });
+    console.error('Payment initiation error:', error);
+    res.status(500).json({ error: 'Payment initiation failed' });
   }
 });
 
@@ -66,7 +54,7 @@ router.post('/mpesa/callback', async (req, res) => {
   try {
     const { Body } = req.body;
     const { stkCallback } = Body;
-
+    
     const checkoutRequestId = stkCallback.CheckoutRequestID;
     const resultCode = stkCallback.ResultCode;
 
@@ -76,61 +64,41 @@ router.post('/mpesa/callback', async (req, res) => {
         item => item.Name === 'MpesaReceiptNumber'
       ).Value;
 
-      // Update payment status
-      const paymentResult = await db.query(
-        'UPDATE payments SET status = $1, mpesa_receipt = $2, completed_at = NOW() WHERE checkout_request_id = $3 RETURNING *',
-        ['completed', mpesaReceiptNumber, checkoutRequestId]
+      await db.query(
+        `UPDATE payments SET status = 'completed', mpesa_receipt_number = $1, completed_at = NOW()
+         WHERE mpesa_checkout_request_id = $2`,
+        [mpesaReceiptNumber, checkoutRequestId]
       );
-      const payment = paymentResult.rows[0];
 
       // Update booking status
       await db.query(
-        'UPDATE bookings SET payment_status = $1 WHERE id = $2',
-        ['paid', payment.booking_id]
+        `UPDATE bookings SET status = 'confirmed' 
+         WHERE id = (SELECT booking_id FROM payments WHERE mpesa_checkout_request_id = $1)`,
+        [checkoutRequestId]
       );
-
-      // Send payment confirmation SMS
-      const NotificationService = require('../utils/notifications');
-      const bookingResult = await db.query(`
-        SELECT u.phone, b.*, ps.spot_number, pz.name as zone_name
-        FROM bookings b
-        JOIN users u ON b.user_id = u.id
-        JOIN parking_spots ps ON b.parking_spot_id = ps.id
-        JOIN parking_zones pz ON ps.parking_zone_id = pz.id
-        WHERE b.id = $1
-      `, [payment.booking_id]);
-
-      if (bookingResult.rows.length > 0) {
-        const booking = bookingResult.rows[0];
-        await NotificationService.sendPaymentConfirmation(booking.phone, {
-          amount: payment.amount,
-          mpesa_receipt: mpesaReceiptNumber
-        });
-      }
-
     } else {
       // Payment failed
       await db.query(
-        'UPDATE payments SET status = $1 WHERE checkout_request_id = $2',
-        ['failed', checkoutRequestId]
+        `UPDATE payments SET status = 'failed' WHERE mpesa_checkout_request_id = $1`,
+        [checkoutRequestId]
       );
     }
 
-    res.json({ message: 'Callback processed' });
+    res.json({ ResultCode: 0, ResultDesc: 'Success' });
   } catch (error) {
-    console.error('M-Pesa callback error:', error);
-    res.status(500).json({ error: 'Callback processing failed' });
+    console.error('Callback error:', error);
+    res.json({ ResultCode: 1, ResultDesc: 'Error' });
   }
 });
 
 // Check payment status
-router.get('/status/:checkoutRequestId', async (req, res) => {
+router.get('/status/:checkout_request_id', authenticateToken, async (req, res) => {
   try {
-    const { checkoutRequestId } = req.params;
+    const { checkout_request_id } = req.params;
 
     const result = await db.query(
-      'SELECT * FROM payments WHERE checkout_request_id = $1',
-      [checkoutRequestId]
+      'SELECT status, mpesa_receipt_number FROM payments WHERE mpesa_checkout_request_id = $1',
+      [checkout_request_id]
     );
 
     if (result.rows.length === 0) {
