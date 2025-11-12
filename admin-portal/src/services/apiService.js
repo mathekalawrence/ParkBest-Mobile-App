@@ -1,9 +1,10 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api.js';
 
-const API_BASE_URL = process.env.REACT_APP_ADMIN_API_URL || 'http://localhost:3001/api/admin';
+const ADMIN_API_URL = `${API_BASE_URL}/admin`;
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: ADMIN_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -1,10 +1,11 @@
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api.js';
 
-// ParkBest Backend API Configuration
-const API_BASE_URL = 'http://192.168.100.5:8080/api/admin';
+// ParkBest Backend API Configuration with auto-detection
+const ADMIN_API_URL = `${API_BASE_URL}/admin`;
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: ADMIN_API_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

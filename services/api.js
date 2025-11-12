@@ -1,10 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api.js';
 
-// API Configuration
-const API_BASE_URL = __DEV__ 
-  ? 'http://192.168.100.5:8080/api'  // Physical device - use your computer's IP
-  : 'https://your-production-domain.com/api';  // Production
+// API Configuration with auto-detection
+
+console.log('📡 API Client using baseURL:', API_BASE_URL);
 
 // Create axios instance
 const apiClient = axios.create({
@@ -15,28 +15,49 @@ const apiClient = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Add request logging
+apiClient.interceptors.request.use(
+  (config) => {
+    console.log('🚀 API Request:', config.method?.toUpperCase(), config.url);
+    console.log('🚀 Full URL:', config.baseURL + config.url);
+    return config;
+  },
+  (error) => {
+    console.log('❌ Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response logging
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log('✅ API Response:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.log('❌ API Error:', error.message);
+    console.log('❌ Error Code:', error.code);
+    if (error.response) {
+      console.log('❌ Response Status:', error.response.status);
+      console.log('❌ Response Data:', error.response.data);
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Add auth token to requests
 apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('userToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log('🚀 API Request:', config.method?.toUpperCase(), config.url);
+    console.log('🚀 Full URL:', config.baseURL + config.url);
     return config;
   },
-  (error) => Promise.reject(error)
-);
-
-// Response interceptor for error handling
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    if (error.response?.status === 401) {
-      // Token expired, redirect to login
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userData');
-      // Navigate to login screen
-    }
+  (error) => {
+    console.log('❌ Request Error:', error);
     return Promise.reject(error);
   }
 );

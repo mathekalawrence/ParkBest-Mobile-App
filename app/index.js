@@ -11,12 +11,10 @@ import SignupScreen from '../screens/SignupScreen';
 import SmartRouterScreen from '../screens/SmartRouterScreen.js';
 import WelcomeScreen from '../screens/WelcomeScreen';
 
-// Creating stack navigator
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    //<NavigationContainer></NavigationContainer>
       <Stack.Navigator 
         initialRouteName="Welcome"
         screenOptions={{
@@ -91,7 +89,6 @@ export default function App() {
       />
 
       </Stack.Navigator>
-    
   );
 }
 
