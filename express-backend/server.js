@@ -60,11 +60,18 @@ app.use('*', (req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 ParkBest Backend Server running on port ${PORT}`);
+});
+
+app.listen(PORT, () => {
+  console.log(` ParkBest Backend Server running on port ${PORT}`);
+//>>>>>>> Stashed changes
   console.log(`📊 Environment: ${process.env.NODE_ENV}`);
   console.log(`🌐 Server accessible at: http://localhost:${PORT}`);
   console.log(`🌐 Network access: http://192.168.100.4:${PORT}`);
 });
+
 
 module.exports = { app, db };

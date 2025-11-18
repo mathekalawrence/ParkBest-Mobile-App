@@ -1,15 +1,15 @@
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BookParkingScreen from '../screens/BookParkingScreen.js';
-import SimpleBookParkingScreen from '../screens/SimpleBookParkingScreen.js';
-import CheckTrafficScreen from '../screens/CheckTrafficScreen';
 import LoginScreen from '../screens/LoginScreen';
 import PaymentScreen from '../screens/PaymentScreen.js';
-import ReportIncidentScreen from '../screens/ReportIncidentScreen.js';
 import ReportScreen from '../screens/ReportScreen.js';
 import SignupScreen from '../screens/SignupScreen';
-import SmartRouterScreen from '../screens/SmartRouterScreen.js';
+import SimpleBookParkingScreen from '../screens/SimpleBookParkingScreen.js';
 import WelcomeScreen from '../screens/WelcomeScreen';
+
+//import "../screens/BookParkingScreen.js";
+
 
 const Stack = createNativeStackNavigator();
 
@@ -52,11 +52,14 @@ export default function App() {
           }}
         />
 
+  
+      {/*
       <Stack.Screen 
        name="ReportIncident" 
        component={ReportIncidentScreen}
        options={{ title: 'Report Accident' }} 
       />
+      */}
 
       <Stack.Screen
       name="BookParking"
@@ -70,6 +73,7 @@ export default function App() {
       options={{ title: 'Book Parking'}}
       />
 
+   { /*
       <Stack.Screen
       name="CheckTraffic"
       component={CheckTrafficScreen}
@@ -81,6 +85,8 @@ export default function App() {
       component={SmartRouterScreen}
       options={{ title: 'Smart Router'}}
       />
+
+    */}
 
       <Stack.Screen
       name="Payment"

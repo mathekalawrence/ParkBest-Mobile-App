@@ -196,8 +196,7 @@ psql -U postgres -d parkbest_db -f database/schema.sql
 
 # Configure environment
 cp .env.example .env
-# Edit .env with your credentials
-
+# Edit .env with your credentials     
 # Start development server
 npm run dev
 ```

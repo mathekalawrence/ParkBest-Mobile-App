@@ -1,4 +1,6 @@
 
+
+/*
 import { useEffect, useState } from 'react';
 import {
   Alert,
@@ -246,37 +248,69 @@ const pickFromGallery = async () => {
     }
   };
 
+  */
+
+  {/*
+
    return (
     <TouchableWithoutFeedback onPress={() => setDropdownVisible(false)}>
       <SafeAreaView style={styles.container}>
+      */}
+
         {/* Header */}
+
+        {/*
+
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleCancel} style={styles.backButton}>
-            {/*<Ionicons name="arrow-back" size={20} color="#fff" /> */}
+          <TouchableOpacity onPress={handleCancel} style={styles.backButton}>   
+
+          */}
+
+
+            {/*<Ionicons name="arrow-back" size={20} color="#fff" /> */} 
+
+            {/*
+
           </TouchableOpacity>
+
           <Text style={styles.headerTitle}>Report Accident</Text>
           <View style={styles.headerRight} />
         </View>
 
-        
+        */}
+
+        {/*
         <ScrollView 
           style={styles.content}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+
+        */}
+
           {/* Emergency Call Button */}
+
+          {/*
           <TouchableOpacity style={styles.emergencyButton} onPress={handleEmergencyCall}>
             <Ionicons name="alert-circle" size={24} color="#6e0202ff" />
             <Text style={styles.emergencyButtonText}>Emergency Call: 0710689178</Text>
           </TouchableOpacity>
 
+          */}
+
           {/* Accident Information Banner */}
+
+          {/*
           <View style={styles.accidentBanner}>
             <Ionicons name="warning" size={20} color="#b71c1c" />
             <Text style={styles.accidentBannerText}>You are reporting a road accident</Text>
           </View>
 
+          */}
+
           {/* Accident Type Dropdown */}
+
+          {/*
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Accident Type </Text>
             <TouchableOpacity 
@@ -320,7 +354,11 @@ const pickFromGallery = async () => {
             </Modal>
           </View>
 
+          */}
+
           {/* Accident Description */}
+
+          {/*
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Accident Description </Text>
             <Text style={styles.sectionSubtitle}>Please describe what happened in detail</Text>
@@ -336,7 +374,9 @@ const pickFromGallery = async () => {
             />
           </View>
 
-          {/* Vehicles Involved */}
+          */}
+
+          {/* Vehicles Involved 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Vehicles & People Involved</Text>
             <Text style={styles.sectionSubtitle}>Enter number of vehicles and people involved</Text>
@@ -378,7 +418,7 @@ const pickFromGallery = async () => {
             ))}
           </View>
 
-          {/* Injuries Section */}
+          * Injuries Section 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Injuries</Text>
             <Text style={styles.sectionSubtitle}>Report any injuries sustained</Text>
@@ -403,7 +443,7 @@ const pickFromGallery = async () => {
             ))}
           </View>
 
-          {/* Evidence Section */}
+        * Evidence Section
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Evidence</Text>
             <Text style={styles.sectionSubtitle}>Add photos or videos of the accident scene</Text>
@@ -425,7 +465,7 @@ const pickFromGallery = async () => {
               </TouchableOpacity>
             </View>
 
-            {/* Evidence Preview */}
+            * Evidence Preview 
             {evidence.length > 0 && (
               <View style={styles.evidencePreview}>
                 <Text style={styles.evidenceTitle}>Accident Evidence ({evidence.length})</Text>
@@ -448,8 +488,8 @@ const pickFromGallery = async () => {
               </View>
             )}
           </View>
-
-          {/* Location Section */}
+          
+          * Location Section 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Accident Location</Text>
             {location ? (
@@ -473,7 +513,7 @@ const pickFromGallery = async () => {
               </View>
             )}
             
-            {/* Map Placeholder */}
+            {/* Map Placeholder 
             <View style={styles.mapPlaceholder}>
               <Ionicons name="map" size={100} color="#ccc" />
               <Text style={styles.mapPlaceholderText}>Accident Location Map</Text>
@@ -483,7 +523,7 @@ const pickFromGallery = async () => {
             </View>
           </View>
 
-          {/* Action Buttons */}
+          {/* Action Buttons 
           <View style={styles.actionButtons}>
             <TouchableOpacity 
               style={[styles.button, styles.cancelButton]}
@@ -509,7 +549,7 @@ const pickFromGallery = async () => {
             </TouchableOpacity>
           </View>
 
-          {/* Safety Notice */}
+          {/* Safety Notice 
           <View style={styles.safetyNotice}>
             <Ionicons name="medkit" size={16} color="#d32f2f" />
             <Text style={styles.safetyNoticeText}>
@@ -517,7 +557,7 @@ const pickFromGallery = async () => {
             </Text>
           </View>
 
-          {/* Required Fields Note */}
+          {/* Required Fields Note 
           <Text style={styles.requiredNote}>* Required fields</Text>
         </ScrollView>
       </SafeAreaView>
@@ -629,7 +669,7 @@ container: {
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 6,
-  }, */
+  }, 
 
   submitButton: {
     backgroundColor: '#1a237e',
@@ -832,3 +872,5 @@ container: {
 
  
 });
+
+*/}

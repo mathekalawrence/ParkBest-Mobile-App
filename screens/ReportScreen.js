@@ -2,7 +2,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import {
   Alert,
-  Linking,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -12,6 +11,8 @@ import {
 } from 'react-native';
 
 export default function ReportScreen({ navigation }) {
+
+  {/*
   // Emergency contact numbers
   const emergencyContacts = {
     police: '999',
@@ -62,6 +63,8 @@ export default function ReportScreen({ navigation }) {
       ]
     );
   };
+
+  */}
 
   //Function to handle book parking
   const handleBookParking = () => {
@@ -124,6 +127,9 @@ export default function ReportScreen({ navigation }) {
           </TouchableOpacity>
 
           {/* Ambulance Contact */}
+
+          {/*
+
           <TouchableOpacity 
             style={styles.contactCard}
             onPress={() => handleEmergencyCall('Ambulance', emergencyContacts.ambulance)}
@@ -138,7 +144,13 @@ export default function ReportScreen({ navigation }) {
             <Ionicons name="call-outline" size={24} color="#1a237e" />
           </TouchableOpacity>
 
+          */}
+
           {/* Road Assistance Contact */}
+
+          {/*
+
+
           <TouchableOpacity 
             style={styles.contactCard}
             onPress={() => handleEmergencyCall('Road Assistance', emergencyContacts.roadAssistance)}
@@ -152,13 +164,23 @@ export default function ReportScreen({ navigation }) {
             </View>
             <Ionicons name="call-outline" size={24} color="#1a237e" />
           </TouchableOpacity>
+
+
+           */}
         </View>
 
+       
+
         {/* Quick Actions Section */}
-        <View style={styles.section}>
+       <View style={styles.section}>
+
+          {/*
           <Text style={styles.sectionTitle}>Quick Actions</Text>
+
+          /*}
           
-          {/* 'Report Incident' Button */}
+          //Report Incident' Button 
+        {/*
           <TouchableOpacity 
             style={styles.reportButton}
             onPress={handleReportIncident}
@@ -166,6 +188,11 @@ export default function ReportScreen({ navigation }) {
             <Ionicons name="warning" size={24} color="#fff" />
             <Text style={styles.reportButtonText}>Report an Incident</Text>
           </TouchableOpacity>
+          
+          */}
+
+
+          
 
           {/* Book Parking Button */}
           <TouchableOpacity
@@ -178,6 +205,7 @@ export default function ReportScreen({ navigation }) {
             <Text style={styles.bookParkingButtonText}>Book Parking</Text>
           </TouchableOpacity>
 
+         {/*
           <TouchableOpacity
            style={styles.bookParkingButton}
            onPress={()=> navigation.navigate('CheckTraffic')}
@@ -186,6 +214,8 @@ export default function ReportScreen({ navigation }) {
             <Ionicons name="" size={24} color="#fff" />
             <Text style={styles.bookParkingButtonText}>Check Traffic</Text>
           </TouchableOpacity>
+
+          */}
 
           {/* Additional Quick Actions */}
           <View style={styles.quickActions}>
@@ -213,11 +243,8 @@ export default function ReportScreen({ navigation }) {
         <View style={styles.infoSection}>
           <Text style={styles.infoTitle}>Safety Tips</Text>
           <Text style={styles.infoText}>
-            • Stay calm and assess the situation before acting{'\n'}
             • Ensure your own safety first{'\n'}
-            • Provide clear location details when reporting{'\n'}
             • Follow instructions from emergency services{'\n'}
-            • Keep emergency numbers handy{'\n'}
             • Please do the necessary with care.
           </Text>
         </View>

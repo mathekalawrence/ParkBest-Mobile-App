@@ -1,6 +1,5 @@
 
-import { Picker } from '@react-native-picker/picker';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -13,7 +12,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+//import MapView, { Marker } from 'react-native-maps';
 import { useAuth } from '../context/AuthContext';
 import { useParking } from '../context/ParkingContext';
 import paymentService from '../services/paymentService';

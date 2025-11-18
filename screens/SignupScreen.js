@@ -1,6 +1,7 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -9,8 +10,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  ActivityIndicator
+  View
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
@@ -147,6 +147,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+    width: 600,
+    alignItems: 'center',
+    alignSelf: 'center',
   },
   keyboardAvoid: {
     flex: 1,
