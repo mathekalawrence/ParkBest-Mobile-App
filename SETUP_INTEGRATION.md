@@ -59,7 +59,7 @@ export default function App() {
               },
             }}
           >
-            {/* Your existing screens */}
+            {/* The existing screens */}
             <Stack.Screen 
               name="Welcome" 
               component={WelcomeScreen}

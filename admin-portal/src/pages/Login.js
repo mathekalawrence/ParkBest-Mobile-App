@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const Login = ({ onLogin, onSwitchToSignup }) => {
   const [formData, setFormData] = useState({
@@ -204,6 +204,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
               }}
               placeholder="Enter your password"
             />
+            
             {errors.password && <div style={styles.errorText}>{errors.password}</div>}
           </div>
 
@@ -240,6 +241,7 @@ const Login = ({ onLogin, onSwitchToSignup }) => {
           >
             Sign up here
           </span>
+          
         </div>
       </div>
     </div>

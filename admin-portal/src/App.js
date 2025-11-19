@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
-import ParkingZones from './pages/ParkingZones';
-import Users from './pages/Users';
+import { useEffect, useState } from 'react';
+import Layout from './components/Layout';
 import Bookings from './pages/Bookings';
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import ParkingZones from './pages/ParkingZones';
 import Payments from './pages/Payments';
 import Reports from './pages/Reports';
-import Layout from './components/Layout';
+import Signup from './pages/Signup';
+import Users from './pages/Users';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -59,6 +59,7 @@ function App() {
         fontFamily: 'Arial, sans-serif',
         flexDirection: 'column'
       }}>
+
         <div style={{
           width: '40px',
           height: '40px',
@@ -67,7 +68,9 @@ function App() {
           borderRadius: '50%',
           animation: 'spin 1s linear infinite',
           marginBottom: '20px'
-        }}></div>
+        }}>
+        </div>
+        
         <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
         <h2>🅿️ ParkBest Admin</h2>
         <p>Loading...</p>
@@ -91,12 +94,14 @@ function App() {
       currentPage={currentPage}
       onPageChange={setCurrentPage}
     >
+
       {currentPage === 'dashboard' && <Dashboard currentUser={currentUser} onPageChange={setCurrentPage} />}
       {currentPage === 'parking' && <ParkingZones />}
       {currentPage === 'users' && <Users />}
       {currentPage === 'bookings' && <Bookings />}
       {currentPage === 'payments' && <Payments />}
       {currentPage === 'reports' && <Reports />}
+      
     </Layout>
   );
 }
