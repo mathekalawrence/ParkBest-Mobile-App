@@ -20,23 +20,9 @@ router.post('/mpesa/initiate', authenticateToken, async (req, res) => {
     }
 
     const booking = bookingResult.rows[0];
-    const amount = Math.round(booking.total_cost);
-
-    console.log('📋 Booking details:', {
-      booking_id,
-      phone_number,
-      amount,
-      total_cost: booking.total_cost
-    });
+    const amount = Math.round(booking.total_amount);
 
     // Initiate STK Push
-    console.log('🚀 Calling STK Push with:', {
-      phone: phone_number,
-      amount,
-      reference: `PB${booking_id}`,
-      description: 'ParkBest Parking Payment'
-    });
-    
     const stkResponse = await mpesaService.initiateSTKPush(
       phone_number,
       amount,
@@ -51,16 +37,14 @@ router.post('/mpesa/initiate', authenticateToken, async (req, res) => {
       [booking_id, req.user.id, amount, stkResponse.CheckoutRequestID]
     );
 
-    console.log('💾 Payment record saved with checkout ID:', stkResponse.CheckoutRequestID);
-
     res.json({
       success: true,
-      message: 'Payment initiated. Check your phone for M-Pesa prompt. If payment completes but status stays pending, use the manual completion option.',
+      message: 'Payment initiated. Check your phone for M-Pesa prompt.',
       checkout_request_id: stkResponse.CheckoutRequestID
     });
 
   } catch (error) {
-    console.error('❌ Payment initiation error:', error);
+    console.error('Payment initiation error:', error);
     res.status(500).json({ error: 'Payment initiation failed' });
   }
 });
@@ -68,23 +52,17 @@ router.post('/mpesa/initiate', authenticateToken, async (req, res) => {
 // M-Pesa callback
 router.post('/mpesa/callback', async (req, res) => {
   try {
-    console.log('📞 M-Pesa Callback received:', JSON.stringify(req.body, null, 2));
-    
     const { Body } = req.body;
     const { stkCallback } = Body;
     
     const checkoutRequestId = stkCallback.CheckoutRequestID;
     const resultCode = stkCallback.ResultCode;
 
-    console.log('📞 Processing callback:', { checkoutRequestId, resultCode });
-
     if (resultCode === 0) {
       // Payment successful
       const mpesaReceiptNumber = stkCallback.CallbackMetadata.Item.find(
         item => item.Name === 'MpesaReceiptNumber'
       ).Value;
-
-      console.log('✅ Payment successful, receipt:', mpesaReceiptNumber);
 
       await db.query(
         `UPDATE payments SET status = 'completed', mpesa_receipt_number = $1, completed_at = NOW()
@@ -100,7 +78,6 @@ router.post('/mpesa/callback', async (req, res) => {
       );
     } else {
       // Payment failed
-      console.log('❌ Payment failed, result code:', resultCode);
       await db.query(
         `UPDATE payments SET status = 'failed' WHERE mpesa_checkout_request_id = $1`,
         [checkoutRequestId]
@@ -109,7 +86,7 @@ router.post('/mpesa/callback', async (req, res) => {
 
     res.json({ ResultCode: 0, ResultDesc: 'Success' });
   } catch (error) {
-    console.error('❌ Callback error:', error);
+    console.error('Callback error:', error);
     res.json({ ResultCode: 1, ResultDesc: 'Error' });
   }
 });
@@ -131,63 +108,6 @@ router.get('/status/:checkout_request_id', authenticateToken, async (req, res) =
     res.json(result.rows[0]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to check payment status' });
-  }
-});
-
-// Manual payment completion (for testing when callback fails)
-router.post('/complete/:checkout_request_id', authenticateToken, async (req, res) => {
-  try {
-    const { checkout_request_id } = req.params;
-    const { mpesa_receipt } = req.body;
-
-    const receiptNumber = mpesa_receipt || `MANUAL${Date.now()}`;
-
-    // Update payment status
-    const result = await db.query(
-      `UPDATE payments SET status = 'completed', mpesa_receipt_number = $1, completed_at = NOW()
-       WHERE mpesa_checkout_request_id = $2 RETURNING booking_id`,
-      [receiptNumber, checkout_request_id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Payment not found' });
-    }
-
-    // Update booking status
-    await db.query(
-      `UPDATE bookings SET status = 'confirmed' WHERE id = $1`,
-      [result.rows[0].booking_id]
-    );
-
-    res.json({
-      success: true,
-      message: 'Payment marked as completed',
-      receipt: receiptNumber
-    });
-  } catch (error) {
-    console.error('Manual completion error:', error);
-    res.status(500).json({ error: 'Failed to complete payment' });
-  }
-});
-
-// Get all payments for a user (for manual completion)
-router.get('/user/pending', authenticateToken, async (req, res) => {
-  try {
-    const result = await db.query(
-      `SELECT p.*, b.id as booking_id, ps.spot_number, pz.name as zone_name
-       FROM payments p
-       JOIN bookings b ON p.booking_id = b.id
-       JOIN parking_spots ps ON b.parking_spot_id = ps.id
-       JOIN parking_zones pz ON ps.parking_zone_id = pz.id
-       WHERE p.user_id = $1 AND p.status = 'pending'
-       ORDER BY p.created_at DESC`,
-      [req.user.id]
-    );
-
-    res.json({ payments: result.rows });
-  } catch (error) {
-    console.error('❌ Get pending payments error:', error);
-    res.status(500).json({ error: 'Failed to fetch pending payments' });
   }
 });
 

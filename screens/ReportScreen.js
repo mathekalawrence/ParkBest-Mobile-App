@@ -170,7 +170,7 @@ export default function ReportScreen({ navigation }) {
           {/* Book Parking Button */}
           <TouchableOpacity
            style={styles.bookParkingButton}
-           onPress={()=> navigation.navigate('SimpleBookParking')}
+           onPress={()=> navigation.navigate('BookParking')}
         
           >
 

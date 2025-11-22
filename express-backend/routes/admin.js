@@ -338,9 +338,12 @@ router.get('/payments', adminAuth, async (req, res) => {
         b.id as booking_id,
         u.full_name as user_name,
         u.email as user_email,
+        u.phone,
         ps.spot_number,
         pz.name as zone_name,
-        b.vehicle_plate
+        b.vehicle_plate,
+        p.mpesa_receipt_number as mpesa_receipt,
+        p.mpesa_checkout_request_id as checkout_request_id
       FROM payments p
       JOIN bookings b ON p.booking_id = b.id
       JOIN users u ON b.user_id = u.id
@@ -411,7 +414,11 @@ router.get('/analytics', adminAuth, async (req, res) => {
     const totalZones = await db.query('SELECT COUNT(*) as count FROM parking_zones WHERE is_active = true');
     const totalSpots = await db.query('SELECT COUNT(*) as count FROM parking_spots');
     const activeBookings = await db.query('SELECT COUNT(*) as count FROM bookings WHERE status IN (\'confirmed\', \'active\')');
-    const totalRevenue = await db.query('SELECT COALESCE(SUM(total_cost), 0) as total FROM bookings WHERE payment_status = \'paid\'');
+    const totalRevenue = await db.query(`
+      SELECT COALESCE(SUM(amount), 0) as total 
+      FROM payments 
+      WHERE status = 'completed'
+    `);
 
     const recentBookings = await db.query(`
       SELECT 
@@ -439,6 +446,83 @@ router.get('/analytics', adminAuth, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch analytics' });
+  }
+});
+
+// Admin: Complete pending payment manually
+router.post('/payments/:paymentId/complete', adminAuth, async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+    const { mpesa_receipt } = req.body;
+
+    console.log('🔄 Admin completing payment:', { paymentId, mpesa_receipt });
+    console.log('👤 Admin user:', req.admin);
+
+    const receiptNumber = mpesa_receipt || `ADMIN${Date.now()}`;
+
+    // Update payment status
+    const result = await db.query(
+      `UPDATE payments SET status = 'completed', mpesa_receipt_number = $1, completed_at = NOW()
+       WHERE id = $2 RETURNING booking_id`,
+      [receiptNumber, paymentId]
+    );
+
+    console.log('📊 Payment update result:', result.rows);
+
+    if (result.rows.length === 0) {
+      console.log('❌ Payment not found with ID:', paymentId);
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    // Update booking status
+    const bookingResult = await db.query(
+      `UPDATE bookings SET status = 'confirmed' WHERE id = $1 RETURNING id`,
+      [result.rows[0].booking_id]
+    );
+
+    console.log('📊 Booking update result:', bookingResult.rows);
+    console.log('✅ Payment completed successfully');
+
+    res.json({
+      success: true,
+      message: 'Payment marked as completed by admin',
+      receipt: receiptNumber
+    });
+  } catch (error) {
+    console.error('❌ Admin payment completion error:', error);
+    res.status(500).json({ error: 'Failed to complete payment: ' + error.message });
+  }
+});
+
+// Admin: Mark payment as failed
+router.post('/payments/:paymentId/fail', adminAuth, async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+
+    console.log('🔄 Admin failing payment:', paymentId);
+    console.log('👤 Admin user:', req.admin);
+
+    const result = await db.query(
+      `UPDATE payments SET status = 'failed' WHERE id = $1 RETURNING booking_id`,
+      [paymentId]
+    );
+
+    console.log('📊 Payment fail result:', result.rows);
+
+    if (result.rows.length === 0) {
+      console.log('❌ Payment not found with ID:', paymentId);
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    console.log('✅ Payment marked as failed successfully');
+
+    res.json({
+      success: true,
+      message: 'Payment marked as failed by admin'
+    });
+  } catch (error) {
+    console.error('❌ Admin payment failure error:', error);
+    res.status(500).json({ error: 'Failed to mark payment as failed: ' + error.message });
   }
 });
 

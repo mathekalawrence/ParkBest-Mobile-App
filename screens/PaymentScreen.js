@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiClient from '../services/api';
 
 const PaymentScreen = ({ route, navigation }) => {
   const { booking } = route.params;
@@ -37,39 +37,38 @@ const PaymentScreen = ({ route, navigation }) => {
 
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem('userToken');
       const formattedPhone = formatPhoneNumber(phoneNumber);
+      console.log('🔄 Initiating M-Pesa payment...');
+      console.log('📱 Phone:', formattedPhone);
+      console.log('💰 Amount:', booking.total_amount);
+      console.log('📋 Booking ID:', booking.id);
 
-      const response = await fetch('http://192.168.100.5:8080/api/payments/mpesa/initiate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          booking_id: booking.id,
-          phone_number: formattedPhone
-        })
+      const response = await apiClient.post('/payments/mpesa/initiate', {
+        booking_id: booking.id,
+        phone_number: formattedPhone
       });
 
-      const data = await response.json();
+      console.log('✅ Payment response:', response.data);
 
-      if (response.ok) {
+      if (response.data.checkout_request_id) {
         Alert.alert(
           'Payment Initiated',
           'Check your phone for M-Pesa prompt and enter your PIN to complete payment.',
           [
             {
               text: 'OK',
-              onPress: () => checkPaymentStatus(data.checkout_request_id)
+              onPress: () => checkPaymentStatus(response.data.checkout_request_id)
             }
           ]
         );
       } else {
-        Alert.alert('Error', data.error || 'Payment initiation failed');
+        Alert.alert('Error', response.data.error || 'Payment initiation failed');
       }
     } catch (error) {
-      Alert.alert('Error', 'Network error. Please try again.');
+      console.error('❌ Payment error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      const errorMessage = error.response?.data?.error || error.message || 'Payment failed';
+      Alert.alert('Payment Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -77,35 +76,31 @@ const PaymentScreen = ({ route, navigation }) => {
 
   const checkPaymentStatus = async (checkoutRequestId) => {
     try {
-      const token = await AsyncStorage.getItem('userToken');
+      console.log('🔍 Checking payment status for:', checkoutRequestId);
       
-      const response = await fetch(`http://192.168.100.5:8080/api/payments/status/${checkoutRequestId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await apiClient.get(`/payments/status/${checkoutRequestId}`);
+      console.log('📊 Payment status:', response.data);
 
-      const data = await response.json();
-
-      if (data.status === 'completed') {
+      if (response.data.status === 'completed') {
         Alert.alert(
           'Payment Successful',
           'Your parking has been confirmed!',
           [
             {
               text: 'OK',
-              onPress: () => navigation.navigate('BookingHistory')
+              onPress: () => navigation.goBack()
             }
           ]
         );
-      } else if (data.status === 'failed') {
+      } else if (response.data.status === 'failed') {
         Alert.alert('Payment Failed', 'Please try again or use a different payment method.');
       } else {
         // Still pending, check again after 5 seconds
+        console.log('⏳ Payment still pending, checking again in 5s...');
         setTimeout(() => checkPaymentStatus(checkoutRequestId), 5000);
       }
     } catch (error) {
-      console.error('Status check error:', error);
+      console.error('❌ Status check error:', error);
     }
   };
 
