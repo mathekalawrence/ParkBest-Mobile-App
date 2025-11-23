@@ -103,122 +103,154 @@ export default function ReportScreen({ navigation }) {
 
       {/* Main Content */}
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Emergency Contacts Section */}
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <Text style={styles.heroTitle}>Find Your Perfect Parking Spot</Text>
+          <Text style={styles.heroSubtitle}>Quick, easy, and hassle-free parking reservations</Text>
+        </View>
+
+        {/* Main Booking Action */}
+        <TouchableOpacity 
+          style={styles.mainBookingButton}
+          onPress={() => navigation.navigate('BookParking')}
+        >
+          <View style={styles.bookingButtonContent}>
+            <Ionicons name="car" size={32} color="#fff" />
+            <View style={styles.bookingButtonText}>
+              <Text style={styles.bookingButtonTitle}>Book Parking Now</Text>
+              <Text style={styles.bookingButtonSubtitle}>Reserve your spot instantly</Text>
+            </View>
+            <Ionicons name="arrow-forward" size={24} color="#fff" />
+          </View>
+        </TouchableOpacity>
+
+        {/* Quick Stats */}
+        <View style={styles.statsSection}>
+          <View style={styles.statCard}>
+            <Ionicons name="location" size={24} color="#4CAF50" />
+            <Text style={styles.statNumber}>50+</Text>
+            <Text style={styles.statLabel}>Parking Zones</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Ionicons name="time" size={24} color="#2196F3" />
+            <Text style={styles.statNumber}>24/7</Text>
+            <Text style={styles.statLabel}>Available</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Ionicons name="checkmark-circle" size={24} color="#FF9800" />
+            <Text style={styles.statNumber}>99%</Text>
+            <Text style={styles.statLabel}>Success Rate</Text>
+          </View>
+        </View>
+
+        {/* Help & Support Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Emergency Contacts</Text>
-          <Text style={styles.sectionSubtitle}>Press any contact to call immediately</Text>
+          <Text style={styles.sectionTitle}>Help & Support</Text>
+          <Text style={styles.sectionSubtitle}>Get assistance when you need it</Text>
           
-          {/* Police Contact */}
+          {/* Customer Helpline */}
           <TouchableOpacity 
             style={styles.contactCard}
-            onPress={() => handleEmergencyCall('Police', emergencyContacts.police)}
+            onPress={() => handleEmergencyCall('Customer Helpline', '+254-700-123456')}
           >
             <View style={styles.contactIcon}>
-              <Ionicons name="shield-checkmark" size={24} color="#d32f2f" />
+              <Ionicons name="headset" size={24} color="#2196F3" />
             </View>
             <View style={styles.contactInfo}>
-              <Text style={styles.contactTitle}>Police</Text>
-              <Text style={styles.contactNumber}>{emergencyContacts.police}</Text>
+              <Text style={styles.contactTitle}>Customer Helpline</Text>
+              <Text style={styles.contactNumber}>+254-700-123456</Text>
             </View>
             <Ionicons name="call-outline" size={24} color="#1a237e" />
           </TouchableOpacity>
 
-          {/* Ambulance Contact */}
+          {/* Technical Support */}
           <TouchableOpacity 
             style={styles.contactCard}
-            onPress={() => handleEmergencyCall('Ambulance', emergencyContacts.ambulance)}
+            onPress={() => handleEmergencyCall('Technical Support', '+254-700-123457')}
           >
             <View style={styles.contactIcon}>
-              <Ionicons name="medkit" size={24} color="#388e3c" />
+              <Ionicons name="construct" size={24} color="#4CAF50" />
             </View>
             <View style={styles.contactInfo}>
-              <Text style={styles.contactTitle}>Ambulance / First Aid</Text>
-              <Text style={styles.contactNumber}>{emergencyContacts.ambulance}</Text>
-            </View>
-            <Ionicons name="call-outline" size={24} color="#1a237e" />
-          </TouchableOpacity>
-
-          {/* Road Assistance Contact */}
-          <TouchableOpacity 
-            style={styles.contactCard}
-            onPress={() => handleEmergencyCall('Road Assistance', emergencyContacts.roadAssistance)}
-          >
-            <View style={styles.contactIcon}>
-              <Ionicons name="build" size={24} color="#f57c00" />
-            </View>
-            <View style={styles.contactInfo}>
-              <Text style={styles.contactTitle}>Road Assistance</Text>
-              <Text style={styles.contactNumber}>{emergencyContacts.roadAssistance}</Text>
+              <Text style={styles.contactTitle}>Technical Support</Text>
+              <Text style={styles.contactNumber}>+254-700-123457</Text>
             </View>
             <Ionicons name="call-outline" size={24} color="#1a237e" />
           </TouchableOpacity>
         </View>
 
-        {/* Quick Actions Section */}
+        {/* My Account Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={styles.sectionTitle}>My Account</Text>
           
-          {/* 'Report Incident' Button */}
-          <TouchableOpacity 
-            style={styles.reportButton}
-            onPress={handleReportIncident}
-          >
-            <Ionicons name="warning" size={24} color="#fff" />
-            <Text style={styles.reportButtonText}>Report an Incident</Text>
-          </TouchableOpacity>
-
-          {/* Book Parking Button */}
-          <TouchableOpacity
-           style={styles.bookParkingButton}
-           onPress={()=> navigation.navigate('BookParking')}
-        
-          >
-
-            <Ionicons name="" size={24} color="#fff" />
-            <Text style={styles.bookParkingButtonText}>Book Parking</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-           style={styles.bookParkingButton}
-           onPress={()=> navigation.navigate('CheckTraffic')}
-        
-          >
-            <Ionicons name="" size={24} color="#fff" />
-            <Text style={styles.bookParkingButtonText}>Check Traffic</Text>
-          </TouchableOpacity>
-
-          {/* Additional Quick Actions */}
           <View style={styles.quickActions}>
             <TouchableOpacity 
               style={styles.quickAction}
-              onPress={() => navigation.navigate('IntegrationReport')}
+              onPress={() => navigation.navigate('BookingHistory')}
             >
-              <Ionicons name="analytics" size={24} color="#1a237e" />
-              <Text style={styles.quickActionText}>Integration Report</Text>
+              <Ionicons name="time" size={24} color="#1a237e" />
+              <Text style={styles.quickActionText}>Booking History</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.quickAction}>
-              <Ionicons name="document-text" size={24} color="#1a237e" />
-              <Text style={styles.quickActionText}>Past Reports</Text>
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => navigation.navigate('PaymentHistory')}
+            >
+              <Ionicons name="card" size={24} color="#1a237e" />
+              <Text style={styles.quickActionText}>Payment History</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.quickAction}>
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => navigation.navigate('Profile')}
+            >
               <Ionicons name="settings" size={24} color="#1a237e" />
-              <Text style={styles.quickActionText}>Settings</Text>
+              <Text style={styles.quickActionText}>Profile Settings</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Quick Services */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Services</Text>
+          
+          <View style={styles.quickActions}>
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => navigation.navigate('CheckTraffic')}
+            >
+              <Ionicons name="car-sport" size={24} color="#1a237e" />
+              <Text style={styles.quickActionText}>Traffic Info</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={handleReportIncident}
+            >
+              <Ionicons name="warning" size={24} color="#1a237e" />
+              <Text style={styles.quickActionText}>Report Issue</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.quickAction}
+              onPress={() => navigation.navigate('OfflineReports')}
+            >
+              <Ionicons name="document-text" size={24} color="#1a237e" />
+              <Text style={styles.quickActionText}>My Reports</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Information Section */}
         <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>Safety Tips</Text>
+          <Text style={styles.infoTitle}>Parking Tips</Text>
           <Text style={styles.infoText}>
-            • Stay calm and assess the situation before acting{'\n'}
-            • Ensure your own safety first{'\n'}
-            • Provide clear location details when reporting{'\n'}
-            • Follow instructions from emergency services{'\n'}
-            • Keep emergency numbers handy{'\n'}
-            • Please do the necessary with care.
+            • Book in advance for guaranteed spots{'\n'}
+            • Check traffic conditions before leaving{'\n'}
+            • Arrive 5 minutes before your booking time{'\n'}
+            • Keep your booking confirmation handy{'\n'}
+            • Report any issues immediately{'\n'}
+            • Enjoy stress-free parking with ParkBest!
           </Text>
         </View>
       </ScrollView>
@@ -315,91 +347,207 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  reportButton: {
-    backgroundColor: '#1a237e',
-    flexDirection: 'row',
-    justifyContent: 'center',
+  heroSection: {
     alignItems: 'center',
-    padding: 18,
-    borderRadius: 10,
-    marginBottom: 20,
+    marginBottom: 30,
+    paddingVertical: 20,
+  },
+  heroTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1a237e',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  heroSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  
+  mainBookingButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 16,
+    marginBottom: 30,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 6,
+    shadowRadius: 8,
   },
-
-   reportButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-
-  bookParkingButton: {
-    backgroundColor: '#1a237e',
+  bookingButtonContent: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    padding: 18,
-    borderRadius: 10,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 6,
+    padding: 20,
   },
-
-   bookParkingButtonText: {
+  bookingButtonText: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  bookingButtonTitle: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginLeft: 10,
+    marginBottom: 4,
+  },
+  bookingButtonSubtitle: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+  },
+  
+  statsSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 30,
+  },
+  statCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 4,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1a237e',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+    textAlign: 'center',
   },
 
-  quickActions: {
+  // My Account Section
+  accountSection: {
+    marginBottom: 32,
+  },
+  accountGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  quickAction: {
-    alignItems: 'center',
+  accountCard: {
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    width: '30%',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 4,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
   },
-  quickActionText: {
-    fontSize: 12,
-    color: '#1a237e',
-    marginTop: 5,
+  accountIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  accountTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginBottom: 4,
     textAlign: 'center',
-    fontWeight: '500',
   },
-  infoSection: {
-    backgroundColor: '#e8eaf6',
-    padding: 15,
-    borderRadius: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#1a237e',
+  accountDescription: {
+    fontSize: 10,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 12,
   },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#1a237e',
-    marginBottom: 10,
+  
+  // Enhanced Services
+  servicesSection: {
+    marginBottom: 32,
   },
-  infoText: {
+  servicesTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  servicesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  serviceCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 4,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+  },
+  serviceIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  serviceTitle: {
     fontSize: 14,
-    color: '#333',
-    lineHeight: 20,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  serviceDescription: {
+    fontSize: 11,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 14,
+  },
+  
+  // Professional Tips Section
+  tipsSection: {
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 32,
+  },
+  tipsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  tipsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginLeft: 8,
+  },
+  tipsList: {
+    gap: 12,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tipText: {
+    fontSize: 14,
+    color: '#4B5563',
+    marginLeft: 12,
+    flex: 1,
   },
 });
