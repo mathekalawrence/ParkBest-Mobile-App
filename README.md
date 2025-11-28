@@ -47,9 +47,9 @@ A comprehensive smart parking solution that reduces urban traffic congestion and
 - **Maps & Navigation:** Google Maps API / Mapbox | React-Native Maps
 
 ### Backend
-- **Runtime:** Node.js | Supabase
-- **Database:** Postgres Embedded on Supabase
-- **Authentication:** Handled by Supabase Auth
+- **Runtime:** Node.js
+- **Database:** Postgres
+- **Authentication:** Handled by JWT Auth
 - **Payments:** MPESA / Airtel Money API Integration
 - **Real-time Features:** 
 - **File Storage:** 
