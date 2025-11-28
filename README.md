@@ -64,7 +64,6 @@ A comprehensive smart parking solution that reduces urban traffic congestion and
 
 Requirements:
 - **Node.js** 
-- **Supabase**
 - **npm** and **expo** package manager
 - **Expo CLI** (for mobile development)
 - **Git**
