@@ -48,8 +48,8 @@ A comprehensive smart parking solution that reduces urban traffic congestion and
 
 ### Backend
 - **Runtime:** Node.js | Supabase
-- **Database:** Postgres Embedded on Supabase
-- **Authentication:** Handled by Supabase Auth
+- **Database:** Postgres 
+- **Authentication:** Handled by JWT Auth
 - **Payments:** MPESA / Airtel Money API Integration
 - **Real-time Features:** 
 - **File Storage:** 
