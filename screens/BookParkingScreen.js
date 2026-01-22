@@ -12,7 +12,18 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+
 //import MapView, { Marker } from 'react-native-maps';
+
+// Conditional import for web compatibility
+import { Platform } from 'react-native';
+let MapView, Marker;
+if (Platform.OS !== 'web') {
+  const Maps = require('react-native-maps');
+  MapView = Maps.default;
+  Marker = Maps.Marker;
+}
+
 import { useAuth } from '../context/AuthContext';
 import { useParking } from '../context/ParkingContext';
 import paymentService from '../services/paymentService';
@@ -398,29 +409,35 @@ const UpdatedBookParkingScreen = () => {
             </TouchableOpacity>
           </View>
           
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: -1.2921,
-              longitude: 36.8219,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-          >
-            {availableSpots.map((spot) => (
-              <Marker
-                key={spot.id}
-                coordinate={{
-                  latitude: -1.2921 + (Math.random() - 0.5) * 0.01,
-                  longitude: 36.8219 + (Math.random() - 0.5) * 0.01,
-                }}
-                title={`Spot ${spot.spot_number}`}
-                description={spot.is_occupied ? 'Occupied' : 'Available'}
-                pinColor={spot.is_occupied ? 'red' : 'green'}
-                onPress={() => !spot.is_occupied && handleSpotSelect(spot)}
-              />
-            ))}
-          </MapView>
+          {Platform.OS === 'web' ? (
+            <View style={[styles.map, styles.webMapPlaceholder]}>
+              <Text style={styles.webMapText}>📱 Map view available on mobile app</Text>
+            </View>
+          ) : (
+            <MapView
+              style={styles.map}
+              initialRegion={{
+                latitude: -1.2921,
+                longitude: 36.8219,
+                latitudeDelta: 0.0922,
+                longitudeDelta: 0.0421,
+              }}
+            >
+              {availableSpots.map((spot) => (
+                <Marker
+                  key={spot.id}
+                  coordinate={{
+                    latitude: -1.2921 + (Math.random() - 0.5) * 0.01,
+                    longitude: 36.8219 + (Math.random() - 0.5) * 0.01,
+                  }}
+                  title={`Spot ${spot.spot_number}`}
+                  description={spot.is_occupied ? 'Occupied' : 'Available'}
+                  pinColor={spot.is_occupied ? 'red' : 'green'}
+                  onPress={() => !spot.is_occupied && handleSpotSelect(spot)}
+                />
+              ))}
+            </MapView>
+          )}
           
           <View style={styles.mapSpotsList}>
             <ScrollView>
@@ -880,6 +897,19 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  webMapPlaceholder: {
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderStyle: 'dashed',
+  },
+  webMapText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6b7280',
   },
 });
 

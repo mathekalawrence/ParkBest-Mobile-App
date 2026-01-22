@@ -199,6 +199,49 @@ export const parkbestAPI = {
         message: error.response?.data?.error || 'Failed to fetch zone spots'
       };
     }
+  },
+
+  // Payment Management
+  completePayment: async (paymentId, mpesaReceipt) => {
+    try {
+      console.log('🚀 API: Completing payment:', { paymentId, mpesaReceipt });
+      console.log('🚀 API URL:', `${ADMIN_API_URL}/payments/${paymentId}/complete`);
+      
+      const response = await api.post(`/payments/${paymentId}/complete`, {
+        mpesa_receipt: mpesaReceipt
+      });
+      
+      console.log('✅ API: Complete payment response:', response.data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('❌ API: Complete payment error:', error);
+      console.error('❌ API: Error response:', error.response?.data);
+      console.error('❌ API: Error status:', error.response?.status);
+      return {
+        success: false,
+        message: error.response?.data?.error || error.message || 'Failed to complete payment'
+      };
+    }
+  },
+
+  failPayment: async (paymentId) => {
+    try {
+      console.log('🚀 API: Failing payment:', paymentId);
+      console.log('🚀 API URL:', `${ADMIN_API_URL}/payments/${paymentId}/fail`);
+      
+      const response = await api.post(`/payments/${paymentId}/fail`);
+      
+      console.log('✅ API: Fail payment response:', response.data);
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('❌ API: Fail payment error:', error);
+      console.error('❌ API: Error response:', error.response?.data);
+      console.error('❌ API: Error status:', error.response?.status);
+      return {
+        success: false,
+        message: error.response?.data?.error || error.message || 'Failed to mark payment as failed'
+      };
+    }
   }
 };
 

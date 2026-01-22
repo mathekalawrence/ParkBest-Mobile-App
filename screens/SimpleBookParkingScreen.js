@@ -10,6 +10,7 @@ import {
   TextInput,
   SafeAreaView,
 } from 'react-native';
+
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../services/api';
@@ -57,6 +58,7 @@ export default function SimpleBookParkingScreen({ navigation }) {
       await reportingService.logParkingEvent('ZONES_LOADED', {
         count: Array.isArray(response.data) ? response.data.length : (response.data.zones?.length || 0)
       });
+      
     } catch (error) {
       console.error('❌ Error loading zones:', error);
       console.error('❌ Error response:', error.response?.data);

@@ -17,10 +17,10 @@ const Dashboard = ({ currentUser, onPageChange }) => {
   useEffect(() => {
     loadDashboardData();
     
-    // Set up real-time refresh every 30 seconds
+    // Set up real-time refresh every 10 seconds for revenue updates
     const interval = setInterval(() => {
       loadDashboardData();
-    }, 30000);
+    }, 10000);
     
     return () => clearInterval(interval);
   }, []);

@@ -16,27 +16,21 @@ class MpesaService {
     
     try {
       console.log('🔄 Getting M-Pesa access token...');
-      console.log('🔗 URL:', `${this.baseUrl}/oauth/v1/generate?grant_type=client_credentials`);
-      
       const response = await axios.get(`${this.baseUrl}/oauth/v1/generate?grant_type=client_credentials`, {
         headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 30000
+          Authorization: `Basic ${auth}`
+        }
       });
-      
       console.log('✅ M-Pesa token response:', response.data);
       return response.data.access_token;
     } catch (error) {
       console.error('❌ M-Pesa token error details:');
       console.error('Status:', error.response?.status);
       console.error('Data:', error.response?.data);
-      console.error('URL:', `${this.baseUrl}/oauth/v1/generate?grant_type=client_credentials`);
-      console.error('Auth header length:', auth.length);
-      
-      // Try with different approach
-      throw new Error(`M-Pesa authentication failed. Check your credentials and use sandbox URL.`);
+      console.error('Headers:', error.response?.headers);
+      console.error('Consumer Key:', this.consumerKey?.substring(0, 10) + '...');
+      console.error('Consumer Secret:', this.consumerSecret?.substring(0, 10) + '...');
+      throw new Error(`Failed to get M-Pesa access token: ${JSON.stringify(error.response?.data) || error.message}`);
     }
   }
 
@@ -65,9 +59,6 @@ class MpesaService {
         TransactionDesc: transactionDesc
       };
 
-      console.log('🚀 STK Push request data:', JSON.stringify(stkPushData, null, 2));
-      console.log('🔗 STK Push URL:', `${this.baseUrl}/mpesa/stkpush/v1/processrequest`);
-
       const response = await axios.post(
         `${this.baseUrl}/mpesa/stkpush/v1/processrequest`,
         stkPushData,
@@ -79,14 +70,9 @@ class MpesaService {
         }
       );
 
-      console.log('✅ STK Push response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ STK Push error details:');
-      console.error('Status:', error.response?.status);
-      console.error('Data:', error.response?.data);
-      console.error('Headers:', error.response?.headers);
-      throw new Error(`STK Push failed: ${JSON.stringify(error.response?.data) || error.message}`);
+      throw new Error(`STK Push failed: ${error.message}`);
     }
   }
 }

@@ -41,6 +41,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+
   title: {
     fontSize: 32,
     fontWeight: 'bold',
@@ -51,6 +52,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
   },
+
   button: {
     backgroundColor: '#ffffff',
     paddingVertical: 15,
@@ -61,6 +63,7 @@ const styles = StyleSheet.create({
       width: 0,
       height: 4,
     },
+    
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 8,

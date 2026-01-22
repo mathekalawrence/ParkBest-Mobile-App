@@ -30,7 +30,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/parking', require('./routes/parking'));
-app.use('/api/payments', require('./routes/payments'));
+// app.use('/api/payments', require('./routes/mock-payments')); // Mock for testing
+app.use('/api/payments', require('./routes/payments')); // Real M-Pesa
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/realtime', require('./routes/realtime'));
 app.use('/api/maps', require('./routes/maps'));

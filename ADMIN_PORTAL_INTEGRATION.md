@@ -104,7 +104,7 @@ class AdminService {
     {
       id: "uuid",
       email: "user@example.com",
-      full_name: "John Doe",
+      full_name: "Lawrence Matheka",
       phone: "+254700000000",
       created_at: "2025-11-06T...",
       total_bookings: 5

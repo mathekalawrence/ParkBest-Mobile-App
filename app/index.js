@@ -1,11 +1,13 @@
 
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import BookParkingScreen from '../screens/BookParkingScreen.js';
+
+
+import SimpleBookParkingScreen from '../screens/SimpleBookParkingScreen.js';
+
 import LoginScreen from '../screens/LoginScreen';
 import PaymentScreen from '../screens/PaymentScreen.js';
 import ReportScreen from '../screens/ReportScreen.js';
 import SignupScreen from '../screens/SignupScreen';
-import SimpleBookParkingScreen from '../screens/SimpleBookParkingScreen.js';
 import WelcomeScreen from '../screens/WelcomeScreen';
 
 //import "../screens/BookParkingScreen.js";
@@ -32,16 +34,19 @@ export default function App() {
           component={WelcomeScreen}
           options={{ headerShown: false }} // Hides header for welcome screen to make it more presentable
         />
+
         <Stack.Screen 
           name="Login" 
           component={LoginScreen}
           options={{ title: 'Login' }}
         />
+
         <Stack.Screen 
           name="Signup" 
           component={SignupScreen}
           options={{ title: 'Create Account' }}
         />
+        
          <Stack.Screen 
           name="Report" 
           component={ReportScreen}
@@ -63,15 +68,10 @@ export default function App() {
 
       <Stack.Screen
       name="BookParking"
-      component={BookParkingScreen}
-      options={{ title: 'Book Parking'}}
-      />
-
-      <Stack.Screen
-      name="SimpleBookParking"
       component={SimpleBookParkingScreen}
       options={{ title: 'Book Parking'}}
       />
+
 
    { /*
       <Stack.Screen
@@ -79,6 +79,7 @@ export default function App() {
       component={CheckTrafficScreen}
       options={{ title: 'State of Traffic'}}
       />
+
 
       <Stack.Screen
       name="SmartRouter"

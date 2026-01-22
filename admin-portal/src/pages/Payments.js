@@ -43,6 +43,37 @@ const Payments = () => {
     }
   };
 
+  const completePayment = async (paymentId, amount) => {
+    const receipt = prompt('Enter M-Pesa receipt number (optional):');
+    if (window.confirm(`Mark payment of Ksh ${amount} as completed?`)) {
+      console.log('🔄 Completing payment:', { paymentId, receipt });
+      const result = await parkbestAPI.completePayment(paymentId, receipt);
+      console.log('📊 Complete payment result:', result);
+      if (result.success) {
+        alert('Payment marked as completed!');
+        loadPayments();
+      } else {
+        console.error('❌ Complete payment error:', result);
+        alert('Failed to complete payment: ' + result.message);
+      }
+    }
+  };
+
+  const failPayment = async (paymentId, amount) => {
+    if (window.confirm(`Mark payment of Ksh ${amount} as failed?`)) {
+      console.log('🔄 Failing payment:', paymentId);
+      const result = await parkbestAPI.failPayment(paymentId);
+      console.log('📊 Fail payment result:', result);
+      if (result.success) {
+        alert('Payment marked as failed!');
+        loadPayments();
+      } else {
+        console.error('❌ Fail payment error:', result);
+        alert('Failed to mark payment as failed: ' + result.message);
+      }
+    }
+  };
+
   const styles = {
     container: { padding: '20px', fontFamily: 'Arial, sans-serif' },
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' },
@@ -234,6 +265,22 @@ const Payments = () => {
                   >
                     👁️ View
                   </button>
+                  {payment.status === 'pending' && (
+                    <>
+                      <button 
+                        style={{...styles.btnPrimary, background: '#10b981'}}
+                        onClick={() => completePayment(payment.id, payment.amount)}
+                      >
+                        ✅ Complete
+                      </button>
+                      <button 
+                        style={styles.btnDanger}
+                        onClick={() => failPayment(payment.id, payment.amount)}
+                      >
+                        ❌ Fail
+                      </button>
+                    </>
+                  )}
                   {payment.status === 'completed' && (
                     <button 
                       style={styles.btnDanger}
